@@ -1,6 +1,7 @@
 package render2d
 
 import "core:math/linalg/glsl"
+import "core:slice"
 import gl "vendor:OpenGL"
 import glfw "vendor:glfw"
 
@@ -10,7 +11,7 @@ vec4 :: glsl.vec4
 
 Vertex :: struct #packed {
 	position: vec3,
-	color: u32,
+	color: vec4,
 }
 
 Renderer :: struct {
@@ -33,7 +34,23 @@ renderer_create :: proc() -> Renderer {
 	return ren
 }
 
+vertices := []Vertex {
+	{
+		position = {0, 0.5, 1.0},
+		color = {0.1, 1.0, 0.1, 1},
+	},
+	{
+		position = {-0.5, -0.5, 1.0},
+		color = {1.0, 0.1, 0.1, 1},
+	},
+	{
+		position = {0.5, -0.5, 1.0},
+		color = {0.1, 0.1, 1.0, 1},
+	},
+}
+
 main :: proc(){
+
 	init_graphics()
 	defer deinit_graphics()
 
@@ -44,7 +61,8 @@ main :: proc(){
 	gl.GenVertexArrays(1, &vao)
 	gl.BindVertexArray(vao)
 
-	#assert(size_of(Vertex) == size_of(vec3) + size_of(u32))
+	gl.BindBuffer(gl.ARRAY_BUFFER, vbo)
+
 	#assert(offset_of(Vertex, color) == size_of(vec3))
 
 	// Position
@@ -52,8 +70,10 @@ main :: proc(){
 	gl.EnableVertexAttribArray(0)
 
 	// Color (packed)
-	gl.VertexAttribPointer(1, 1, gl.UNSIGNED_INT, false, size_of(Vertex), offset_of(Vertex, color))
+	gl.VertexAttribPointer(1, 3, gl.FLOAT, false, size_of(Vertex), offset_of(Vertex, color))
 	gl.EnableVertexAttribArray(1)
+
+	gl.BufferData(gl.ARRAY_BUFFER, slice.size(vertices), raw_data(vertices), gl.STATIC_DRAW)
 
 	vert_source :: #load("default.vert", string)
 	frag_source :: #load("default.frag", string)
@@ -61,11 +81,20 @@ main :: proc(){
 	prog, ok := gl.load_shaders_source(vert_source, frag_source)
 	gl.UseProgram(prog)
 
+	gl.Enable(gl.BLEND);
+	gl.BlendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
+
 	for !glfw.WindowShouldClose(platform.window){
 		glfw.PollEvents()
 		gl.ClearColor(0.0, 0.0, 0.0, 1.0)
 		gl.Clear(gl.COLOR_BUFFER_BIT)
+
+		gl.UseProgram(prog)
+		gl.BindVertexArray(vao)
+		gl.DrawArrays(gl.TRIANGLES, 0, 3)
+
 		glfw.SwapBuffers(platform.window)
 	}
+	
 }
 
