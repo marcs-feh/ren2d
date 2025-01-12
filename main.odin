@@ -62,8 +62,8 @@ renderer_create :: proc() -> Renderer {
 	gl_buffer_data(gl.ARRAY_BUFFER, R.vertices[:], .Dynamic_Draw)
 	gl_buffer_data(gl.ELEMENT_ARRAY_BUFFER, R.indices[:], .Dynamic_Draw)
 
-	gl.Enable(gl.BLEND);
-	gl.BlendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
+	gl.Enable(gl.BLEND)
+	gl.BlendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA)
 
 	vert_source :: #load("default.vert", string)
 	frag_source :: #load("default.frag", string)
@@ -163,6 +163,7 @@ main :: proc(){
 
 		renderer_push_rect(&R, {{150, 150}, 200, 200}, {0.7, 0.7, 0.4, 1.0})
 		renderer_push_rect(&R, {{400, 400}, 200, 200}, {0.2, 0.7, 0.7, 1.0})
+		renderer_push_rect(&R, {{40 + int(mx), 30 + int(my)}, 200, 200}, {0.2, 0.7, 0.7, 1.0})
 		renderer_push_rect(&R, {{auto_cast mx, auto_cast my}, 100, 200}, {0.2, 0.7, 0.4, 0.8})
 
 		renderer_draw(&R)
