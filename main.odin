@@ -161,7 +161,7 @@ main :: proc(){
 	R = renderer_create()
 	renderer_update_screen_size(&R, glfw.GetWindowSize(platform.window))
 
-	TARGET_FPS :: 120
+	TARGET_FPS :: 60
 	TIME_PER_FRAME := time.Duration(math.trunc(f64(1.0 / TARGET_FPS) * f64(time.Second)))
 
 	for !glfw.WindowShouldClose(platform.window){
