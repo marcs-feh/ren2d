@@ -6,3 +6,4 @@
 *.so
 *.a
 ren2d
+.vscode

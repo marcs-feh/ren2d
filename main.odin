@@ -72,6 +72,7 @@ renderer_create :: proc() -> Renderer {
 
 	ren.vbo = vbo
 	ren.vao = vao
+	ren.ebo = ebo
 	ren.default_shader = prog
 
 	return ren
@@ -112,6 +113,10 @@ Rect :: struct {
 }
 
 renderer_draw :: proc(ren: ^Renderer){
+	gl.Enable(gl.BLEND);
+	gl.BlendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
+	gl.Enable(gl.ALPHA_TEST);
+
 	gl.UseProgram(R.default_shader)
 	gl.BindVertexArray(R.vao)
 
@@ -147,7 +152,7 @@ renderer_push_rect :: proc(ren: ^Renderer, rect: Rect, color: vec4){
 		},
 	)
 
-	base := u32(len(ren.indices))
+	base := u32(len(ren.vertices)) - 4
 	append(&ren.indices,
 		base + 0, base + 1, base + 3,
 		base + 1, base + 2, base + 3,
@@ -164,16 +169,21 @@ main :: proc(){
 	TARGET_FPS :: 60
 	TIME_PER_FRAME := time.Duration(math.trunc(f64(1.0 / TARGET_FPS) * f64(time.Second)))
 
+	gl.ClearColor(0.0, 0.0, 0.0, 1.0)
+
+
+
 	for !glfw.WindowShouldClose(platform.window){
 		glfw.PollEvents()
-		gl.ClearColor(0.0, 0.0, 0.0, 1.0)
 		gl.Clear(gl.COLOR_BUFFER_BIT)
 
 		mx, my := glfw.GetCursorPos(platform.window)
-
 		frame_begin := time.now()
 
-		renderer_push_rect(&R, {{auto_cast mx, auto_cast my}, 100, 200}, {0.2, 0.7, 0.4, 1.0})
+		renderer_push_rect(&R, {{150, 150}, 200, 200}, {0.7, 0.7, 0.4, 1.0})
+		renderer_push_rect(&R, {{400, 400}, 200, 200}, {0.2, 0.7, 0.7, 1.0})
+		renderer_push_rect(&R, {{auto_cast mx, auto_cast my}, 100, 200}, {0.2, 0.7, 0.4, 0.8})
+
 		renderer_draw(&R)
 		glfw.SetCursorPos(platform.window, mx, my)
 
