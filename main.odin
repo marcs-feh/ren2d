@@ -64,6 +64,9 @@ renderer_create :: proc() -> Renderer {
 	gl.BufferData(gl.ARRAY_BUFFER, slice.size(R.vertices[:]), raw_data(R.vertices[:]), gl.DYNAMIC_DRAW)
 	gl.BufferData(gl.ELEMENT_ARRAY_BUFFER, slice.size(R.indices[:]), raw_data(R.indices[:]), gl.DYNAMIC_DRAW)
 
+	gl.Enable(gl.BLEND);
+	gl.BlendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
+
 	vert_source :: #load("default.vert", string)
 	frag_source :: #load("default.frag", string)
 
@@ -113,10 +116,6 @@ Rect :: struct {
 }
 
 renderer_draw :: proc(ren: ^Renderer){
-	gl.Enable(gl.BLEND);
-	gl.BlendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
-	gl.Enable(gl.ALPHA_TEST);
-
 	gl.UseProgram(R.default_shader)
 	gl.BindVertexArray(R.vao)
 
@@ -170,7 +169,6 @@ main :: proc(){
 	TIME_PER_FRAME := time.Duration(math.trunc(f64(1.0 / TARGET_FPS) * f64(time.Second)))
 
 	gl.ClearColor(0.0, 0.0, 0.0, 1.0)
-
 
 
 	for !glfw.WindowShouldClose(platform.window){
