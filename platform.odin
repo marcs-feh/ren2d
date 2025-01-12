@@ -30,6 +30,7 @@ init_graphics :: proc(){
 
 	glfw.SetFramebufferSizeCallback(platform.window, resize_handler)
 	glfw.SetKeyCallback(platform.window, key_handler)
+	glfw.SetWindowUserPointer(platform.window, &R)
 
 	glfw.MakeContextCurrent(platform.window)
 	gl.load_up_to(4, 3, glfw.gl_set_proc_address)
@@ -43,6 +44,8 @@ deinit_graphics :: proc(){
 @(private="file")
 resize_handler :: proc "c" (window: glfw.WindowHandle, width, height: i32){
 	gl.Viewport(0, 0, width, height)
+	ren := cast(^Renderer)glfw.GetWindowUserPointer(window)
+	renderer_update_screen_size(ren, width, height)
 }
 
 @(private="file")
