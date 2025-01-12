@@ -5,17 +5,17 @@ import "core:slice"
 import "core:fmt"
 import "core:math"
 import "core:time"
+import array "core:container/small_array"
 import gl "vendor:OpenGL"
 import glfw "vendor:glfw"
 
-vec2 :: glsl.vec2
-vec3 :: glsl.vec3
-vec4 :: glsl.vec4
 
 Vertex :: struct #packed {
 	position: vec2,
 	color: vec4,
 }
+
+TEXTURE_SLOT_COUNT :: 8
 
 Renderer :: struct {
 	screen: struct {
@@ -24,10 +24,13 @@ Renderer :: struct {
 
 	vertices: [dynamic]Vertex,
 	indices: [dynamic]u32,
+	textures: [dynamic]u32,
 
-	vao: u32,
-	vbo: u32,
-	ebo: u32,
+	texture_slots: array.Small_Array(TEXTURE_SLOT_COUNT, u32),
+
+	vao: VAO,
+	vbo: VBO,
+	ebo: EBO,
 	default_shader: u32,
 }
 
@@ -35,21 +38,16 @@ renderer_create :: proc() -> Renderer {
 	ren : Renderer
 	ren.indices = make([dynamic]u32, 0, 256)
 	ren.vertices = make([dynamic]Vertex, 0, 256)
+	
+	vao := gl_gen_vao()
+	vbo := gl_gen_vbo()
+	ebo := gl_gen_ebo()
 
-	vbo : u32
-	gl.GenBuffers(1, &vbo)
+	gl_bind_vertex_array(vao)
+	defer gl_bind_vertex_array(0)
 
-	ebo : u32
-	gl.GenBuffers(1, &ebo)
-
-	vao : u32
-	gl.GenVertexArrays(1, &vao)
-
-	gl.BindVertexArray(vao)
-	defer gl.BindVertexArray(0)
-
-	gl.BindBuffer(gl.ARRAY_BUFFER, vbo)
-	gl.BindBuffer(gl.ELEMENT_ARRAY_BUFFER, ebo)
+	gl_bind_vertex_buffer(vbo)
+	gl_bind_element_buffer(ebo)
 
 	#assert(offset_of(Vertex, color) == size_of(vec2))
 
@@ -61,8 +59,8 @@ renderer_create :: proc() -> Renderer {
 	gl.VertexAttribPointer(1, len(Vertex{}.color), gl.FLOAT, false, size_of(Vertex), offset_of(Vertex, color))
 	gl.EnableVertexAttribArray(1)
 
-	gl.BufferData(gl.ARRAY_BUFFER, slice.size(R.vertices[:]), raw_data(R.vertices[:]), gl.DYNAMIC_DRAW)
-	gl.BufferData(gl.ELEMENT_ARRAY_BUFFER, slice.size(R.indices[:]), raw_data(R.indices[:]), gl.DYNAMIC_DRAW)
+	gl_buffer_data(gl.ARRAY_BUFFER, R.vertices[:], .Dynamic_Draw)
+	gl_buffer_data(gl.ELEMENT_ARRAY_BUFFER, R.indices[:], .Dynamic_Draw)
 
 	gl.Enable(gl.BLEND);
 	gl.BlendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
@@ -91,24 +89,7 @@ renderer_update_screen_size :: proc "contextless" (ren: ^Renderer, width, height
 	gl.Uniform2f(viewport_uniform, 1.0 / w, 1.0 / h)
 }
 
-// vertices := []Vertex {
-// 	{
-// 		position = {0, 0},
-// 		color = {0.1, 1.0, 0.1, 1},
-// 	},
-// 	{
-// 		position = {400, 400},
-// 		color = {1.0, 0.1, 0.1, 1},
-// 	},
-// 	{
-// 		position = {200, 400},
-// 		color = {0.1, 0.1, 1.0, 1},
-// 	},
-// }
-
 R : Renderer
-
-Shape :: union {}
 
 Rect :: struct {
 	using pos: [2]int,
@@ -117,10 +98,10 @@ Rect :: struct {
 
 renderer_draw :: proc(ren: ^Renderer){
 	gl.UseProgram(R.default_shader)
-	gl.BindVertexArray(R.vao)
+	gl_bind_vertex_array(R.vao)
 
-	gl.BufferData(gl.ARRAY_BUFFER, slice.size(R.vertices[:]), raw_data(R.vertices[:]), gl.DYNAMIC_DRAW)
-	gl.BufferData(gl.ELEMENT_ARRAY_BUFFER, slice.size(R.indices[:]), raw_data(R.indices[:]), gl.DYNAMIC_DRAW)
+	gl_buffer_data(gl.ARRAY_BUFFER, R.vertices[:], .Dynamic_Draw)
+	gl_buffer_data(gl.ELEMENT_ARRAY_BUFFER, R.indices[:], .Dynamic_Draw)
 
 	gl.DrawElements(gl.TRIANGLES, auto_cast len(R.indices), gl.UNSIGNED_INT, nil)
 
@@ -157,6 +138,8 @@ renderer_push_rect :: proc(ren: ^Renderer, rect: Rect, color: vec4){
 		base + 1, base + 2, base + 3,
 	)
 }
+
+renderer_load_texture :: proc(ren: ^Renderer, identifier: string, ){}
 
 main :: proc(){
 	init_graphics()
