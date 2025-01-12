@@ -47,6 +47,19 @@ vertices := []Vertex {
 		position = {0.5, -0.5, 1.0},
 		color = {0.1, 0.1, 1.0, 1},
 	},
+
+	{
+		position = vec3{0, 0.5, 1.0},
+		color = {1.0, 0, 0, 0.5},
+	},
+	{
+		position = vec3{-0.5, -0.5, 1.0},
+		color = {1.0, 0, 0, 0.5},
+	},
+	{
+		position = vec3{0.7, -0.5, 1.0},
+		color = {1.0, 0, 0, 0.5},
+	},
 }
 
 main :: proc(){
@@ -81,8 +94,9 @@ main :: proc(){
 	prog, ok := gl.load_shaders_source(vert_source, frag_source)
 	gl.UseProgram(prog)
 
-	gl.Enable(gl.BLEND);
-	gl.BlendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
+	gl.Enable(gl.DEPTH_TEST)
+	gl.Enable(gl.BLEND)
+	// gl.BlendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
 
 	for !glfw.WindowShouldClose(platform.window){
 		glfw.PollEvents()
@@ -91,7 +105,7 @@ main :: proc(){
 
 		gl.UseProgram(prog)
 		gl.BindVertexArray(vao)
-		gl.DrawArrays(gl.TRIANGLES, 0, 3)
+		gl.DrawArrays(gl.TRIANGLES, 0, i32(len(vertices) * 3))
 
 		glfw.SwapBuffers(platform.window)
 	}
