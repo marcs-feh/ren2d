@@ -38,7 +38,6 @@ def is_map_type(t, internal_dict):
     return t.name.startswith("map[")
 
 class MapChildProvider:
-
     def __init__(self, val, dict):
         self.val = val
 
@@ -54,7 +53,7 @@ class MapChildProvider:
         value_cell = data.GetChildMemberWithName("value_cell")
 
         raw_data = data.GetValueAsUnsigned()
-        key_ptr = raw_data & ~63
+        key_ptr  = raw_data & ~63
         cap_log2 = raw_data & 63
         cap = 0 if cap_log2 <= 0 else 1 << cap_log2
 
@@ -65,7 +64,7 @@ class MapChildProvider:
         assert size_of_hash == 8
     
         value_ptr = self.cell_index(key_ptr, key_cell_info, cap)
-        hash_ptr =  self.cell_index(value_ptr, value_cell_info, cap)
+        hash_ptr  = self.cell_index(value_ptr, value_cell_info, cap)
 
         error = lldb.SBError()
 
@@ -101,7 +100,7 @@ class MapChildProvider:
 
             key_index += 1
 
-        print("not found")
+        print("<not found>")
 
     def cell_info(self, typev, cell_type):
         elements_per_cell = 0
@@ -137,8 +136,8 @@ class MapChildProvider:
             cell_index = index >> 5;
             data_index = index & 31;
         else:
-            cell_index = index / elements_per_cell;
-            data_index = index % elements_per_cell;
+            cell_index = index / info.elements_per_cell
+            data_index = index % info.elements_per_cell
 
         return base + (cell_index * info.size_of_cell) + (data_index * info.size_of_type);
 
